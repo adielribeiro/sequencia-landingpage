@@ -1,11 +1,11 @@
 # Sequência – Jogo de cartas em rede (React + Node)
 
-Este repositório contém uma implementação básica do jogo de cartas **Sequência**, descrito pelo utilizador, utilizando **React** no front‑end e **Node.js/Express com Socket.IO** no back‑end.  O objetivo é fornecer uma base funcional que permita jogar online em tempo real, com regras implementadas de acordo com as instruções fornecidas.
+Este repositório contém uma implementação básica do jogo de cartas **Sequência**, descrito pelo utilizador, utilizando **React** no front‑end e **Node.js/Express com Socket.IO** no back‑end.  O objetivo é fornecer uma base funcional que permita jogar online em tempo real, com regras implementadas.
 
 ## Como funciona
 
 * **Cartas** – Existem 6 tipos de cartas: quatro comuns (`machado`, `espada`, `escudo`, `arco`) com 10 exemplares cada e duas especiais (`poção` e `armadilha`) com 5 exemplares cada, totalizando 50 cartas.
-* **Jogadores** – De 2 a 5 participantes podem jogar em cada partida.  O host pode
+* **Jogadores** – De 2 a 4 participantes podem jogar em cada partida.  O host pode
   optar por preencher lugares vazios com adversários controlados pela IA.  Cada
   jogador (humano ou bot) recebe 8 cartas no início.
 * **Regras de turno** – Em cada volta (sequência), os jogadores jogam uma carta da mão; cartas comuns não podem repetir o tipo já colocado na mesa naquele turno. Cartas especiais podem ser repetidas.
