@@ -1,0 +1,261 @@
+.boardShell{
+  width: min(1200px, 100vw);
+  padding: var(--safePad);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.board{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)),
+    url('/assets/board_coliseu.png');
+  background-size: cover;
+  background-position: center;
+  outline: 1px solid rgba(255,255,255,.10);
+}
+
+/* Mobile-first: alvo principal = celular em landscape (ex: 740x360) */
+:root{
+  --slotW: 9.5vmin;
+  --slotH: calc(var(--slotW) * 1.35);
+  --handW: 9.0vmin;
+  --handH: calc(var(--handW) * 1.35);
+}
+
+/* Slots (cartas jogadas) */
+.slot{
+  position:absolute;
+  width: var(--slotW);
+  height: var(--slotH);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.slot__box{
+  width: 100%;
+  height: 100%;
+}
+
+/* Posições seguindo o layout desenhado */
+.slot--ai2{ top: 34%; left: 50%; transform: translate(-50%, -50%); }
+.slot--ai1{ top: 50%; left: 33%; transform: translate(-50%, -50%); }
+.slot--ai3{ top: 50%; left: 67%; transform: translate(-50%, -50%); }
+.slot--human{ top: 64%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Monte */
+.deck{
+  position:absolute;
+  left: 50%;
+  top: 73%;
+  transform: translate(-50%, -50%);
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 6px;
+  pointer-events:none;
+}
+
+.deck__stack{
+  position:relative;
+  width: calc(var(--slotW) * .9);
+  height: calc(var(--slotH) * .9);
+}
+
+.deck__card{
+  position:absolute;
+  inset:0;
+  border-radius: var(--cardRadius);
+  background: url('/assets/back_card.jpg');
+  background-size: cover;
+  background-position: center;
+  outline: 1px solid rgba(255,255,255,.10);
+  box-shadow: var(--shadow);
+}
+
+.deck__card--1{ transform: translate(0px, 0px) rotate(-2deg); }
+.deck__card--2{ transform: translate(4px, -3px) rotate(2deg); opacity:.95; }
+.deck__card--3{ transform: translate(8px, -6px) rotate(5deg); opacity:.9; }
+
+.deck__label{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.16);
+}
+
+/* Area do jogador (placa grande) */
+.playerArea{
+  position:absolute;
+  width: 16%;
+  height: 42%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.playerArea__frame{
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  outline: 2px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.12);
+  backdrop-filter: blur(2px);
+}
+
+.playerArea--ai1{ left: 2.5%; top: 30%; transform: translateY(-50%); }
+.playerArea--ai2{ top: 3.5%; left: 50%; transform: translate(-50%, 0); width: 34%; height: 14%; }
+.playerArea--ai3{ right: 2.5%; top: 30%; transform: translateY(-50%); }
+.playerArea--human{ left: 50%; bottom: 10%; transform: translate(-50%, 50%); width: 46%; height: 16%; }
+
+/* Mãos */
+.hand{
+  position:absolute;
+  display:flex;
+  gap: min(1.2vmin, 10px);
+  align-items:center;
+}
+
+.hand__card{
+  width: var(--handW);
+  height: var(--handH);
+}
+
+/* Human hand: parte de baixo */
+.hand--human{
+  left: 50%;
+  bottom: 2.8%;
+  transform: translateX(-50%);
+}
+
+/* IA2: topo - cartas menores e mais compactas */
+.hand--ai2{
+  left: 50%;
+  top: 2.6%;
+  transform: translateX(-50%);
+  opacity: .98;
+}
+
+/* IA1: vertical esquerda */
+.hand--ai1{
+  left: 3.6%;
+  top: 52%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+.hand--ai3{
+  right: 3.6%;
+  top: 52%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+/* Barra de status */
+.statusBar{
+  position:absolute;
+  top: 10px;
+  right: 12px;
+  display:flex;
+  justify-content:flex-end;
+  pointer-events:none;
+}
+
+.statusBar__pill{
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.15);
+  backdrop-filter: blur(6px);
+}
+
+/* Ajustes para telas MUITO pequenas */
+@media (max-width: 420px){
+  :root{
+    --slotW: 10.5vmin;
+    --handW: 9.5vmin;
+  }
+  .playerArea--human{ width: 54%; }
+}
+
+/* Desktop / notebook (mantém proporcional, dá mais "ar") */
+@media (min-width: 900px){
+  :root{
+    --slotW: 70px;
+    --handW: 64px;
+  }
+  .boardShell{
+    padding: 16px;
+  }
+}
+
+
+/* ===== Leque nas mãos (override) ===== */
+.hand{
+  position:absolute;
+  width: max(260px, 52vmin);
+  height: max(110px, 22vmin);
+  pointer-events: none;
+}
+
+.hand__card{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--handW);
+  height: var(--handH);
+  pointer-events: auto;
+}
+
+/* Human hand: parte de baixo (leque) */
+.hand--human{
+  left: 50%;
+  bottom: 1.2%;
+  transform: translateX(-50%);
+  width: max(320px, 68vmin);
+  height: max(120px, 24vmin);
+}
+
+/* IA2: topo (leque) */
+.hand--ai2{
+  left: 50%;
+  top: 1.2%;
+  transform: translateX(-50%);
+  width: max(300px, 62vmin);
+  height: max(110px, 20vmin);
+  opacity: .98;
+}
+
+/* IA1: esquerda (leque vertical) */
+.hand--ai1{
+  left: 2.8%;
+  top: 52%;
+  transform: translateY(-50%);
+  width: max(120px, 22vmin);
+  height: max(260px, 52vmin);
+}
+
+/* IA3: direita (leque vertical) */
+.hand--ai3{
+  right: 2.8%;
+  top: 52%;
+  transform: translateY(-50%);
+  width: max(120px, 22vmin);
+  height: max(260px, 52vmin);
+}
+
+/* Monte mais centralizado */
+.deck{
+  top: 69%;
+}

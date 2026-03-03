@@ -1,0 +1,1770 @@
+/* Centralizar o tabuleiro no centro da tela */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #0b0f16;
+  color: #fff;
+}
+
+html, body, #root { height: 100%; }
+
+/* =========================
+   Escala responsiva (uma fonte da verdade)
+   ========================= */
+:root{
+  /* Escala global da UI do tabuleiro (diminui tudo um pouco para caber melhor em 100%) */
+  /* Escala global da UI (mesa + cartas + assentos). Ajuste fino aqui. */
+  --uiScale: 0.80;
+
+  /* Escala extra só das CARTAS (pedido: -20% abaixo de 900px) */
+  --cardScale: 1;
+
+  /* Ajuste fino do MONTE (deck) no centro do tabuleiro */
+  /* (em px, mas multiplicado por --uiScale automaticamente) */
+  --deckPosX: 50%;
+  --deckPosY: 50%;
+  --deckScale: 0.82;
+  --deckShiftX: 0px;   /* + direita | - esquerda */
+  --deckShiftY: 0px;   /* + baixo    | - cima */
+
+  /* Cartas base (oponentes / slots / monte) */
+  /* usa vmin (menor entre vw e vh) para reduzir quando falta altura e evitar barra de rolagem */
+  --cardW: calc(clamp(76px, 7.2vmin, 120px) * var(--uiScale) * var(--cardScale));
+--cardH: calc(clamp(112px, 10.8vmin, 180px) * var(--uiScale) * var(--cardScale));
+/* Cartas da mão (um pouco maiores) */
+  --handCardW: calc(clamp(96px, 9.0vmin, 140px) * var(--uiScale) * var(--cardScale));
+--handCardH: calc(clamp(140px, 13.0vmin, 196px) * var(--uiScale) * var(--cardScale));
+--handOverlap: calc(clamp(-84px, -7.0vmin, -56px) * var(--uiScale) * var(--cardScale));
+/* Slot de carta jogada por assento */
+  --playedW: var(--cardW);
+  --playedH: var(--cardH);
+
+  /* Assentos */
+  --seatSideW: calc(clamp(200px, 22vmin, 340px) * var(--uiScale));
+  --seatTopMainW: calc(clamp(280px, 32vmin, 420px) * var(--uiScale));
+  --seatTopSideW: calc(clamp(220px, 26vmin, 320px) * var(--uiScale));
+
+  /* Overlap visual das mãos dos oponentes */
+  --oppOverlapH: calc(clamp(-80px, -6.6vmin, -60px) * var(--uiScale) * var(--cardScale));
+--oppOverlapV: calc(clamp(-110px, -9.8vmin, -84px) * var(--uiScale) * var(--cardScale));
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.lobby {
+  max-width: 440px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background: rgba(255,255,255,.92);
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.lobbyTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+}
+.btnLink{
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btnLink:hover{ text-decoration: underline; }
+
+.lobbyUser{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  padding:.75rem;
+  margin:.75rem 0 1rem;
+  background: rgba(15, 23, 42, .06);
+  border-radius: 12px;
+}
+.lobbyAvatar{
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+.lobbyUserName{ font-weight: 800; color:#0f172a; }
+.lobbyUserEmail{ font-size:.9rem; color:#475569; }
+
+/* ===== Auth ===== */
+.authShell{
+  min-height: calc(100vh - 40px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+}
+.authCard{
+  width: min(720px, 94vw);
+  background: rgba(255,255,255,.92);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  padding: 18px;
+}
+.authHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.authTitle{ font-size: 28px; font-weight: 900; color:#0f172a; }
+.authSubtitle{ color:#475569; margin-top: 2px; }
+.authTabs{ display:flex; gap: 8px; }
+.authTab{
+  border: 1px solid rgba(2, 6, 23, .12);
+  background: rgba(15, 23, 42, .04);
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor:pointer;
+}
+.authTab.active{
+  background: rgba(37, 99, 235, .12);
+  border-color: rgba(37, 99, 235, .35);
+}
+.authForm{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.authForm label{ display:flex; flex-direction:column; gap:6px; font-weight:700; color:#0f172a; }
+.authForm input{
+  border: 1px solid rgba(2, 6, 23, .14);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.authPrimary{
+  grid-column: 1 / -1;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+.authHint{
+  grid-column: 1 / -1;
+  color:#475569;
+  font-size: .95rem;
+}
+.authAvatarSection{ grid-column: 1 / -1; }
+.authAvatarTitle{ font-weight: 900; margin: 4px 0 10px; color:#0f172a; }
+.avatarGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.avatarPick{
+  border: 1px solid rgba(2, 6, 23, .12);
+  background: rgba(15, 23, 42, .04);
+  border-radius: 14px;
+  padding: 10px;
+  cursor: pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 8px;
+}
+.avatarPick.active{
+  background: rgba(37, 99, 235, .12);
+  border-color: rgba(37, 99, 235, .35);
+}
+.avatarLabel{ font-weight: 900; color:#0f172a; font-size:.92rem; }
+@media (max-width: 640px){
+  .authForm{ grid-template-columns: 1fr; }
+  .avatarGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.lobby h1{ margin-top:0; color:#0f172a; }
+.lobby label{ color:#111827; font-weight:600; }
+.lobby input, .lobby select{ background:#fff; color:#0f172a; }
+.lobby button{ font-weight:700; }
+
+.lobby form > div {
+  margin-bottom: 1rem;
+}
+.lobby input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.lobby button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+/* Ajustar largura da mesa e centralizar */
+.game-board {
+  width: 100%;
+  max-width: 1200px;
+  margin: 1rem auto;
+  padding: 1rem;
+  background: rgba(255,255,255,.92);
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.lobby h1{ margin-top:0; color:#0f172a; }
+.lobby label{ color:#111827; font-weight:600; }
+.lobby input, .lobby select{ background:#fff; color:#0f172a; }
+.lobby button{ font-weight:700; }
+
+/* Mostrar jogadores em linha e distribuir espaço */
+.players {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.players .player {
+  flex: 1 1 30%;
+  text-align: center;
+  margin: 0.25rem;
+}
+.players .player.me {
+  font-weight: bold;
+}
+.players .player.current {
+  background-color: #e7f4ff;
+  border: 2px solid #007bff;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+.table {
+  margin-top: 1rem;
+}
+.table-cards {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.hand {
+  margin-top: 1rem;
+}
+/* Mostrar cartas da mão em uma única linha com rolagem horizontal */
+.hand-cards {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+/* Componente de carta genérico */
+.card-component {
+  width: var(--cardW);
+  height: var(--cardH);
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 14px;
+  /* Remove o fundo branco para parecer que a carta está "flutuando" sobre a mesa */
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+
+/* Mão do jogador: wrapper para cada carta */
+.hand-card-wrapper {
+  width: 120px;
+  height: 180px;
+}
+.hand-card-wrapper.selected {
+  border: 2px solid #faad14;
+  border-radius: 4px;
+}
+.hand-card {
+  width: 100%;
+  height: 100%;
+}
+
+/* Cartas na mesa: tamanho menor */
+.table-card-wrapper {
+  width: 50px;
+  height: 75px;
+  margin: 0.25rem;
+}
+
+.table-card-wrapper .card-component {
+  width: 100%;
+  height: 100%;
+}
+.controls {
+  margin-top: 1rem;
+}
+.controls button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+}
+.events {
+  margin-top: 1rem;
+  background: #fffbe6;
+  padding: 0.5rem;
+  border: 1px solid #ffe58f;
+  border-radius: 4px;
+}
+.event {
+  margin-bottom: 0.25rem;
+}
+
+/* ===== Layout v2 fixes ===== */
+/* Tema Coliseu: tabuleiro como "stage" (só fundo/slots — as cartas reais ficam por cima) */
+.gameRoot {
+  isolation: isolate;
+  /* trava a cena no viewport para não sobrar 1px e criar scroll em 100% */
+  height: 100svh;
+  min-height: 100svh;
+  position: relative;
+  overflow: hidden;
+  /* cor de fallback (caso a imagem não carregue) */
+  background: radial-gradient(circle at 50% 10%, #2b2a2a, #0f0f10 70%);
+}
+
+.gameRoot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url('./assets/board_coliseu.png');
+  background-size: cover;
+  background-position: center -110px;
+  background-repeat: no-repeat;
+
+  /* "bem viva" sem mexer nos elementos (aplica só no fundo) */
+  filter: saturate(1.45) contrast(1.18) brightness(1.06);
+  transform: scale(1.02);
+  z-index: -2;
+}
+
+/* overlay sutil para legibilidade */
+.gameRoot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(0,0,0,.05), rgba(0,0,0,.58) 70%),
+    linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.58));
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* garante que o conteúdo fique acima do fundo */
+.gameRoot > .appContainer{
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shell do jogo (substitui o container do bootstrap para caber certinho no viewport) */
+.gameShell{
+  height: 100%;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: calc(clamp(10px, 1.6vmin, 18px) * var(--uiScale));
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.gameBoardRoot{
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gameStage{
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.playerHandBar{
+  flex: 0 0 auto;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.gameHeader{ flex: 0 0 auto; }
+.tableWrapper {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+  margin-top: calc(clamp(10px, 1.4vmin, 16px) * var(--uiScale));
+  padding: calc(clamp(12px, 1.8vmin, 22px) * var(--uiScale));
+
+  /* Grid para evitar sobreposição e deixar tudo mais legível */
+  display: grid;
+  grid-template-columns: var(--seatSideW) 1fr var(--seatSideW);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "top top top"
+    "left center right";
+  /* mais respiro entre os elementos (evita sensação de "amontoado") */
+  gap: calc(clamp(22px, 2.6vw, 38px) * var(--uiScale));
+  align-items: start;
+  height: 100%;
+  min-height: 0;
+}
+
+/* pequenos avatares nos assentos */
+.seatAvatar{ display:inline-flex; align-items:center; justify-content:center; margin-right: 8px; }
+
+.centerArea {
+  grid-area: center;
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(28px * var(--uiScale));
+  /* espaço para as cartas jogadas (especialmente do topo) não colidirem com o monte */
+  padding: calc(clamp(44px, 5vh, 70px) * var(--uiScale)) calc(18px * var(--uiScale)) calc(clamp(24px, 3vh, 44px) * var(--uiScale));
+  min-width: 0;
+  /* garante que cartas dos assentos possam "passar por cima" */
+  z-index: 1;
+  min-height: clamp(360px, 46vh, 560px);
+}
+
+/* Assentos sempre acima do centro (para a carta não ficar atrás do monte/mesa) */
+.seat { position: relative; z-index: 3; }
+
+.playArea {
+  width: min(1400px, 100%);
+  min-height: 460px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 14px 14px 10px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+}
+.playTitle { font-weight: 700; margin-bottom: 10px; }
+
+.playInner{ display:flex; align-items:center; justify-content:space-between; gap: 18px; }
+
+/* "Tapete" central — agora a mesa é mais vazia, e as cartas aparecem nos assentos */
+.tableFelt{
+  height: 380px;
+  border-radius: 16px;
+  background: radial-gradient(circle at 30% 20%, rgba(0,0,0,.04), transparent 55%),
+              radial-gradient(circle at 70% 80%, rgba(0,0,0,.04), transparent 55%),
+              rgba(0,0,0,.02);
+  border: 1px dashed rgba(0,0,0,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.deckInsideCenter{ width: 200px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.tableHint{ font-size: 12px; opacity: .7; }
+
+/* Centro sem a DIV da mesa: só o monte central */
+.centerDeck{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap: 8px;
+  /* empurra o monte um pouco para baixo para abrir "corredor" visual das cartas do topo */
+  margin-top: clamp(28px, 3.2vh, 52px);
+  /*
+    Ajuste fino do MONTE (deck) para casar com o "slot" do tabuleiro (imagem de fundo).
+    Mantém responsivo: o deslocamento é multiplicado por --uiScale.
+  */
+  transform: translate(
+    calc(var(--deckShiftX, 36px) * var(--uiScale)),
+    calc(var(--deckShiftY, -18px) * var(--uiScale))
+  );
+}
+
+/* Carta jogada "na frente" do deck/assento */
+/*
+  A ideia: cada assento tem seu "slot" de carta, mas ele fica puxado na direção do centro.
+  Assim o jogador identifica rapidamente quem já jogou na rodada.
+*/
+.seatPlayed{ margin-top: 10px; display:flex; justify-content:center; }
+.playedSlot{ width: var(--playedW); height: var(--playedH); }
+.playedSlotCard{ width: var(--playedW); height: var(--playedH); border-radius: 12px; overflow:hidden; box-shadow: 0 10px 26px rgba(0,0,0,.14); background:#fff; }
+.playedSlotPlaceholder{ width: var(--playedW); height: var(--playedH); border-radius: 12px; border: 2px dashed rgba(0,0,0,.16); background: rgba(0,0,0,.03); }
+
+.myPlayedRow{ margin-top: 10px; display:flex; flex-direction:column; align-items:flex-start; }
+.playedRow {
+  display: grid;
+  /* sempre 4 colunas; o JSX injeta --cols (default 4) */
+  grid-template-columns: repeat(var(--cols, 4), 140px);
+  grid-auto-rows: 200px;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  min-height: 210px;
+  flex: 1;
+  min-width: 0;
+}
+.playedCard { width: 140px; height: 200px; }
+
+.playedCard.placeholder{
+  border: 2px dashed rgba(0,0,0,.12);
+  border-radius: 12px;
+  background: rgba(0,0,0,.03);
+}
+
+.deckInside{ width: 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+.deckTitle { font-weight: 700; margin-bottom: 6px; }
+.deckSpot { width: var(--cardW); height: var(--cardH); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.12); }
+.deckCount { margin-top: 8px; font-weight: 600; }
+
+.myHandArea {
+  max-width: 1280px;
+  margin: 10px auto 0;
+  background: rgba(0,0,0,.18);
+  border: 2px solid rgba(0,0,0,.10);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.06);
+  /* evita empurrar o layout e criar scroll */
+  max-height: clamp(140px, 18svh, 240px);
+  overflow: hidden;
+}
+
+
+/* Cabeçalho da mão do jogador: título à esquerda, objetivo ao centro, status à direita */
+.handHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.handHeaderLeft{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.handTitleText{
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: rgba(255,255,255,.96);
+  text-shadow: 0 2px 6px rgba(0,0,0,.65);
+  line-height: 1;
+}
+.handHeaderCenter{
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.handStatusGroup{
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+.objectiveLabel{
+  color: rgba(255,255,255,.92) !important;
+  font-weight: 650;
+  text-shadow: 0 2px 8px rgba(0,0,0,.75);
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.10);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(460px, 48vw);
+  /* em telas menores, o objetivo encolhe e o badge fica colado à direita */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.handHeaderRight{
+  flex: 0 0 auto;
+}
+.turnBadge{
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* IMPORTANTE: existe um .badge global usado em cartas (posicionamento absoluto).
+   Para o status do turno na barra "Sua mão", precisamos de um badge "normal" (no fluxo). */
+.handStatusGroup .badge{
+  position: static !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* cores do status (sem depender de Bootstrap) */
+.handStatusGroup .bg-success{
+  background: rgba(22, 163, 74, .88) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.95) !important;
+}
+.handStatusGroup .bg-secondary{
+  background: rgba(100, 116, 139, .82) !important;
+  border-color: rgba(255,255,255,.12) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+
+/* Slot do HUMANO na rodada — fora do card "Sua mão" (como no mockup) */
+.seatBottomPlayed{
+  grid-area: center;
+  justify-self: center;
+  align-self: end;
+  /* sobe um pouco para ficar entre o humano e o monte */
+  /* desce mais para não encostar / sobrepor o monte */
+  margin-bottom: clamp(80px, 10vh, 140px);
+  z-index: 5;
+}
+
+.myPlayedRow{ align-items: center; }
+
+.handRow {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 8px 12px;
+  scrollbar-width: thin;
+}
+
+/* Centraliza a mão quando ela "cabe", mas permite scroll quando não cabe */
+.handRowInner{
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  gap: 0;
+  width: max-content;
+  margin: 0 auto;
+}
+.handCardWrap {
+  width: var(--handCardW);
+  height: var(--handCardH);
+  flex: 0 0 auto;
+  margin-left: var(--handOverlap); /* sobreposição só pela beirada */
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
+}
+.handCardWrap:first-child{ margin-left: 0; }
+.handCardInner { width: 100%; height: 100%; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 26px rgba(0,0,0,.16); background: transparent; }
+.handPlayable:hover { transform: translateY(-10px) scale(1.02); z-index: 5; }
+.handBlocked { filter: grayscale(1) opacity(.55); cursor: not-allowed; }
+
+.oppHand { display:flex; align-items:center; justify-content:center; }
+.oppHandVertical { flex-direction: column; }
+.oppCardWrap { width: var(--cardW); height: var(--cardH); }
+.oppMore { font-weight: 700; margin-left: 10px; opacity: .8; }
+
+.seat { text-align: center; position: relative; }
+.seatHeader { font-weight: 800; }
+.seatSub { font-size: 12px; opacity: .75; margin-bottom: 6px; }
+.seatTop { grid-area: top; position: static; top: auto; left: auto; transform: none; display: flex; gap: 24px; justify-content: center; }
+.seatTopBlock {
+  position: relative;
+  /* remove o "cartão" branco para integrar com o tabuleiro */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.seatTopBlock.meio { min-width: var(--seatTopMainW); }
+.seatTopBlock.lateral { min-width: var(--seatTopSideW); }
+
+.seatLeft { grid-area: left;
+  /* remove o painel branco */
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: none;
+  min-height: calc(var(--cardH) + 64px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+	  /* mantém a IA1 mais para a esquerda (afastando um pouco do centro) */
+	  justify-self: start;
+	  /* desloca o bloco inteiro um pouco para a ESQUERDA */
+	  transform: translateX(clamp(-34px, -2vw, -18px));
+}
+.seatRight { grid-area: right;
+  /* remove o painel branco */
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: none;
+  min-height: calc(var(--cardH) + 64px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Mantém legibilidade dos nomes/contagem sobre o fundo */
+.seatHeader, .seatSub {
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 2px 8px rgba(0,0,0,.65);
+}
+
+/* Garante que o título/contagem da IA1 fiquem sempre “por cima” das cartas */
+.seatLeft .seatHeader,
+.seatLeft .seatSub{
+  position: relative;
+  z-index: 2;
+}
+
+/* Puxa o slot na direção do centro (com posicionamento mais estável e menos sobreposição) */
+.seatLeft .seatPlayed{
+  position: absolute;
+  right: calc(0px - (var(--playedW) + clamp(26px, 2.4vw, 40px)));
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+}
+.seatRight .seatPlayed{
+  position: absolute;
+  left: calc(0px - (var(--playedW) + clamp(26px, 2.4vw, 40px)));
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+}
+.seatTopBlock .seatPlayed{
+  position: absolute;
+  left: 50%;
+  /* aproxima do assento do topo para não colidir com o monte no centro */
+  bottom: calc(0px - (var(--playedH) + clamp(10px, 1.2vh, 18px)));
+  transform: translateX(-50%);
+  margin-top: 0;
+}
+
+@media (max-width: 1100px) {
+  .tableWrapper { grid-template-columns: clamp(190px, 26vw, 280px) 1fr clamp(190px, 26vw, 280px); }
+}
+
+@media (max-width: 900px) {
+  :root{ --cardScale: 0.60; }
+
+  .tableWrapper {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "top"
+      "center"
+      "bottom";
+  }
+  .seatLeft, .seatRight { display: none; }
+}
+
+.logBox { max-height: 160px; overflow: auto; }
+
+
+/* 🏆 Overlay de vitória */
+.winnerOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction: column;
+  text-align: center;
+  padding: 24px;
+  z-index:9999;
+  font-weight:700;
+}
+
+
+/* 🪽 Animação carta voando da mão para mesa */
+.flyingCard{
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  transform: translateX(-50%);
+  animation: flyToTable .35s ease forwards;
+  z-index: 999;
+  pointer-events: none;
+}
+
+@keyframes flyToTable{
+  0%{
+    transform: translate(-50%, 0) scale(1);
+    opacity:1;
+  }
+  100%{
+    transform: translate(-50%, -280px) scale(.8);
+    opacity:.8;
+  }
+}
+
+
+/* 🔄 Popup fim do turno */
+.turnPopup{
+  position: fixed;
+  top: 86px;
+  right: 20px;
+  left: auto;
+  transform: none;
+
+  background: rgba(0,0,0,.78);
+  backdrop-filter: blur(8px);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:16px;
+  z-index:9999;
+  animation: fadeTurn 2s ease forwards;
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+}
+
+@keyframes fadeTurn{
+  0%{opacity:0; transform:translateY(-18px);}
+  10%{opacity:1;}
+  90%{opacity:1;}
+  100%{opacity:0; transform:translateY(-18px);}
+}
+
+
+/* ⭐ Jogador iniciador do turno */
+.starterHighlight{
+  animation: starterGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes starterGlow{
+  0%{color:#000;}
+  50%{color:#ff9800; text-shadow:0 0 12px rgba(255,152,0,.7);}
+  100%{color:#000;}
+}
+
+
+/* 🎬 Impacto quando carta aterrissa */
+.playedCard{
+  animation: cardImpact .25s ease;
+}
+
+@keyframes cardImpact{
+  0%{ transform:scale(.92); }
+  60%{ transform:scale(1.05); }
+  100%{ transform:scale(1); }
+}
+
+
+/* 🂠 Cartas indo para o monte */
+.tableClear .playedCard{
+  animation: tableToDeck .6s ease forwards;
+}
+
+@keyframes tableToDeck{
+  0%{ transform:translateY(0) scale(1); opacity:1;}
+  100%{ transform:translateY(-120px) scale(.6); opacity:0;}
+}
+
+/* 🎲 Dice overlay (armadilha) */
+.diceOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+}
+.diceModal{
+  /* Tema escuro para não "estourar" branco em cima do tabuleiro */
+  background: rgba(18, 18, 22, 0.92);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  padding: 18px 18px 14px;
+  width: min(360px, 92vw);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.diceModal .text-muted{
+  /* bootstrap text-muted fica ilegível em fundo escuro */
+  color: rgba(255,255,255,0.72) !important;
+}
+
+.diceTitle{
+  font-weight: 800;
+  font-size: 20px;
+  margin-bottom: 6px;
+  text-align:center;
+  color: rgba(255,255,255,0.96);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.45);
+}
+
+.diceFace{
+  font-size: 72px;
+  text-align:center;
+  line-height: 1;
+  margin: 6px 0 10px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));
+}
+
+.diceMsg{
+  text-align:center;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,0.86);
+}
+
+.gameRoot > * { position: relative; z-index: 2; }
+
+.gameScreen{ min-height: 100vh; }
+
+/* =========================
+   Mobile Mode (layout jogável em telas pequenas)
+   - diminui a mesa toda
+   - aumenta área de toque
+   - garante mão sempre visível e central
+   ========================= */
+@media (max-width: 820px){
+  :root{
+    /* no mobile, caber tudo é rei */
+    --uiScale: 0.68;
+
+    /* deixa a mão um pouco mais "legível" sem estourar a tela */
+    --handCardW: calc(clamp(92px, 12.0vmin, 132px) * var(--uiScale) * var(--cardScale));
+--handCardH: calc(clamp(132px, 17.2vmin, 188px) * var(--uiScale) * var(--cardScale));
+--handOverlap: calc(clamp(-64px, -8.2vmin, -44px) * var(--uiScale) * var(--cardScale));
+/* assentos mais estreitos para sobrar espaço no centro */
+    --seatSideW: calc(clamp(140px, 24vw, 210px) * var(--uiScale));
+    --seatTopMainW: calc(clamp(220px, 44vw, 360px) * var(--uiScale));
+    --seatTopSideW: calc(clamp(180px, 36vw, 300px) * var(--uiScale));
+  }
+
+  .gameShell{
+    padding: 10px;
+  }
+
+  /* topo mais compacto */
+  .gameHeader h1{ font-size: 26px; }
+
+  /* mesa mais compacta */
+  .tableWrapper{
+    touch-action: pan-x pan-y;
+    gap: 14px;
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .centerArea{
+    min-height: clamp(260px, 40vh, 420px);
+    padding: 26px 10px 18px;
+  }
+
+  /* botões do topo ficam mais fáceis de tocar */
+  .btn, button{
+    min-height: 40px;
+  }
+
+  /* mão sempre visível e centralizada; rolagem só horizontal */
+  .playerHandBar{
+    max-height: clamp(96px, 16vh, 170px);
+  }
+
+  .handRowInner{
+    margin: 0 auto;
+  }
+}
+
+/* celulares bem pequenos */
+@media (max-width: 420px){
+  :root{ --uiScale: 0.62; }
+  .centerArea{ padding-top: 22px; }
+}
+
+
+
+/* =========================
+   Layout "MODELO" (responsivo igual ao projeto modelo)
+   Apenas UI: não altera lógica do jogo.
+   ========================= */
+
+.boardShell{
+  width: min(1200px, 100vw);
+  padding: calc(clamp(8px, 1.4vmin, 16px) * var(--uiScale));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin: 0 auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.board{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  outline: 1px solid rgba(255,255,255,.10);
+  /* fundo já vem do .gameRoot::before; aqui só uma camada pra dar "moldura" */
+  background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.22));
+}
+
+/* variáveis de tamanho inspiradas no MODELO */
+:root{
+  --slotW: calc(9.5vmin * var(--uiScale));
+  --slotH: calc(var(--slotW) * 1.35);
+  --handW: calc(9.0vmin * var(--uiScale));
+  --handH: calc(var(--handW) * 1.35);
+}
+
+/* garante que o stage não gere scroll por 1px */
+.gameStage{
+  align-items: center;
+}
+
+/* Esconde o layout antigo de grid/flex do tableWrapper */
+.tableWrapper{ display: contents; }
+
+/* ===== Posicionamento dos assentos (players) dentro do tabuleiro ===== */
+.seat{
+  position: absolute;
+  width: 16%;
+  height: 42%;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  justify-content:flex-start;
+  gap: calc(6px * var(--uiScale));
+  padding: calc(8px * var(--uiScale));
+  border-radius: 16px;
+  background: rgba(0,0,0,.18);
+  backdrop-filter: blur(2px);
+  outline: 2px solid rgba(255,255,255,.12);
+}
+
+/*
+  Side seats (IA1 / IA3)
+  - Aumenta a "div/painel" para as cartas caberem dentro
+  - Desce um pouco o bloco para não disputar espaço com o topo
+*/
+.seatLeft{ left: 2.5%; top: 36%; height: 54%; transform: translateY(-50%); }
+.seatRight{ right: 2.5%; top: 36%; height: 54%; transform: translateY(-50%); }
+
+/* topo (pode ter 1 ou 2 blocos) */
+.seatTop{
+  position: absolute;
+  top: 3.5%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 44%;
+  height: 14%;
+  display:flex;
+  gap: calc(10px * var(--uiScale));
+  align-items: stretch;
+  justify-content:center;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  backdrop-filter: none;
+}
+
+.seatTopBlock{
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 16px;
+  padding: calc(10px * var(--uiScale)) calc(12px * var(--uiScale));
+  background: rgba(0,0,0,.18);
+  outline: 2px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(2px);
+
+  /* layout: título à esquerda, cartas à direita (não cobre o nome) */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: calc(12px * var(--uiScale));
+  row-gap: calc(2px * var(--uiScale));
+}
+
+
+
+.seatTopBlock .seatHeader{
+  justify-self: start;
+  text-align: left;
+}
+.seatTopBlock .seatSub{
+  justify-self: start;
+  text-align: left;
+  margin: 0;
+}
+.seatTopBlock .oppHand{
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  align-self: center;
+  justify-self: center;
+}
+
+/* Slot (carta jogada por cada assento) */
+.seatPlayed, .seatBottomPlayed{
+  position: absolute;
+  width: var(--slotW);
+  height: var(--slotH);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.seatLeft .seatPlayed{ top: 60%; left: 56%; transform: translate(-50%, -50%); z-index: 6; }
+.seatRight .seatPlayed{ top: 60%; left: 44%; transform: translate(-50%, -50%); z-index: 6; }
+
+/* topo: coloca slot no centro da barra */
+.seatTop .seatPlayed{ position: static; width: auto; height: auto; }
+.seatTopBlock .seatPlayed{ position: absolute; top: 230%; left: 50%; transform: translate(-50%, 0) translateX(calc(-14px * var(--uiScale))); z-index: 6; }
+
+/* humano (slot jogado) */
+.seatBottomPlayed{
+  top: 72%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Monte central */
+.centerArea{
+  position: absolute;
+  left: var(--deckPosX, 50%);
+  top: var(--deckPosY, 58%);
+  transform:
+    translate(-50%, -50%)
+    translate(
+      calc(var(--deckShiftX, 0px) * var(--uiScale)),
+      calc(var(--deckShiftY, 0px) * var(--uiScale))
+    );
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: calc(6px * var(--uiScale));
+  pointer-events: none;
+}
+
+/* Neutraliza ajustes antigos do monte (agora a posição é controlada em .centerArea) */
+.centerDeck{
+  margin-top: 0 !important;
+  transform: none !important;
+  position: relative;
+}
+
+.centerDeck .deckSpot{
+  width: calc(var(--slotW) * .95 * var(--deckScale, 0.82));
+  height: calc(var(--slotH) * .95 * var(--deckScale, 0.82));
+}
+
+.centerDeck .deckCount{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.16);
+}
+
+/* Info do monte ao lado (badge à direita do monte) */
+.centerDeck .deckInfo{
+  position: absolute;
+  left: calc(100% + (12px * var(--uiScale)));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(8px * var(--uiScale));
+  white-space: nowrap;
+}
+
+/* ===== Mãos (oponentes) dentro do tabuleiro ===== */
+.oppHand{
+  position: absolute;
+  pointer-events: none;
+}
+
+.oppHand .oppCardWrap{ pointer-events: none; }
+
+.seatLeft .oppHand{
+  /* traz a mão para dentro do painel e centraliza na coluna */
+  left: 50%;
+  /*
+    Desce um pouco o bloco de cartas para não “comer” o título (IA 1).
+    Usamos clamp para ficar estável em diferentes resoluções.
+  */
+  top: calc(54% + clamp(10px, 1.6vh, 18px));
+  transform: translate(-50%, -50%);
+}
+
+.seatRight .oppHand{
+  /*
+    IA3: abaixa o bloco das cartas para manter o título livre
+    (mesmo comportamento da IA1)
+  */
+  left: 50%;
+  top: calc(54% + clamp(10px, 1.6vh, 18px));
+  transform: translate(-50%, -50%);
+}
+
+/* Garante que o título/contagem da IA3 fiquem sempre “por cima” das cartas */
+.seatRight .seatHeader,
+.seatRight .seatSub{
+  position: relative;
+  z-index: 2;
+}
+
+.seatTop .oppHand{
+  /* no topo a mão entra no fluxo do bloco (para não cobrir o título) */
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+}
+
+/* ===== Sua mão: overlay na borda inferior do tabuleiro ===== */
+.playerHandBar{
+  position: absolute;
+  left: 50%;
+  bottom: 1.2%;
+  transform: translateX(-50%);
+  width: max(320px, 68vmin);
+  height: max(120px, 24vmin);
+  padding: 0;
+}
+
+/* dentro da sua mão: centraliza e mantém scroll quando precisar */
+.myHandArea{
+  height: 100%;
+  background: transparent;
+  padding: 0;
+  /* garante que o cabeçalho (Objetivo + sua vez) não "caia" pro rodapé */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cabeçalho da mão sempre visível e alinhado */
+.myHandArea .handHeader{
+  flex: 0 0 auto;
+}
+
+.handRow{
+  /* ocupa o restante do espaço abaixo do cabeçalho */
+  flex: 1 1 auto;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.handRowInner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Objetivo + badge sempre na mesma linha (badge colado à direita do objetivo) */
+.handStatusGroup{
+  flex-wrap: nowrap;
+}
+
+/* fallback para telas MUITO pequenas */
+@media (max-width: 420px){
+  :root{
+    --slotW: calc(10.5vmin * var(--uiScale));
+    --handW: calc(9.5vmin * var(--uiScale));
+  }
+  .playerHandBar{ width: max(300px, 76vmin); }
+}
+
+/* desktop / notebook */
+@media (min-width: 900px){
+  :root{
+    --slotW: calc(70px * var(--uiScale));
+    --handW: calc(64px * var(--uiScale));
+  }
+  .boardShell{ padding: 16px; }
+}
+
+/* Em telas baixas, esconde o cabeçalho da mão para não empurrar cartas */
+@media (max-height: 420px){
+  .playerHandBar .d-flex.align-items-center.justify-content-between{ display:none !important; }
+  .playerHandBar .handRow{ margin-top: 0 !important; }
+}
+
+
+/* ===== Layout do tabuleiro (IGUAL AO MODELO) ===== */
+:root{
+  --bg: #0b0f14;
+  --gold: #d7b46a;
+  --gold2:#b88938;
+  --cardRadius: 12px;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --safePad: 10px;
+}
+
+*{ box-sizing:border-box; }
+html, body { height:100%; }
+body{
+  margin:0;
+  background: var(--bg);
+  color: #eef2ff;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", "Noto Sans", "Liberation Sans", sans-serif;
+}
+
+.app{
+  min-height:100vh;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+}
+
+
+.card{
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--cardRadius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  outline: 1px solid rgba(255,255,255,.08);
+}
+
+.card:active{ transform: translateY(1px); }
+
+.card__img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* evita cortar de forma esquisita */
+  display:block;
+}
+
+
+.badge{
+  position:absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -12px;
+  background: rgba(20, 26, 34, .85);
+  border: 1px solid rgba(255,255,255,.16);
+  color: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .2px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  white-space: nowrap;
+}
+
+
+.boardShell{
+  width: min(1200px, 100vw);
+  padding: var(--safePad);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.board{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)),
+    url('/assets/board_coliseu.png');
+  background-size: cover;
+  background-position: center;
+  outline: 1px solid rgba(255,255,255,.10);
+}
+
+/* Mobile-first: alvo principal = celular em landscape (ex: 740x360) */
+:root{
+  --slotW: 9.5vmin;
+  --slotH: calc(var(--slotW) * 1.35);
+  --handW: 9.0vmin;
+  --handH: calc(var(--handW) * 1.35);
+}
+
+/* Slots (cartas jogadas) */
+.slot{
+  position:absolute;
+  width: var(--slotW);
+  height: var(--slotH);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.slot__box{
+  width: 100%;
+  height: 100%;
+}
+
+/* Posições seguindo o layout desenhado */
+.slot--ai2{ top: 34%; left: 50%; transform: translate(-50%, -50%); }
+.slot--ai1{ top: 50%; left: 33%; transform: translate(-50%, -50%); }
+.slot--ai3{ top: 50%; left: 67%; transform: translate(-50%, -50%); }
+.slot--human{ top: 64%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Monte */
+.deck{
+  position:absolute;
+  left: 50%;
+  top: 73%;
+  transform: translate(-50%, -50%);
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 6px;
+  pointer-events:none;
+}
+
+.deck__stack{
+  position:relative;
+  width: calc(var(--slotW) * .9);
+  height: calc(var(--slotH) * .9);
+}
+
+.deck__card{
+  position:absolute;
+  inset:0;
+  border-radius: var(--cardRadius);
+  background: url('/assets/back_card.jpg');
+  background-size: cover;
+  background-position: center;
+  outline: 1px solid rgba(255,255,255,.10);
+  box-shadow: var(--shadow);
+}
+
+.deck__card--1{ transform: translate(0px, 0px) rotate(-2deg); }
+.deck__card--2{ transform: translate(4px, -3px) rotate(2deg); opacity:.95; }
+.deck__card--3{ transform: translate(8px, -6px) rotate(5deg); opacity:.9; }
+
+.deck__label{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.16);
+}
+
+/* Area do jogador (placa grande) */
+.playerArea{
+  position:absolute;
+  width: 16%;
+  height: 42%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.playerArea__frame{
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  outline: 2px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.12);
+  backdrop-filter: blur(2px);
+}
+
+.playerArea--ai1{ left: 2.5%; top: 30%; transform: translateY(-50%); }
+.playerArea--ai2{ top: 3.5%; left: 50%; transform: translate(-50%, 0); width: 34%; height: 14%; }
+.playerArea--ai3{ right: 2.5%; top: 30%; transform: translateY(-50%); }
+.playerArea--human{ left: 50%; bottom: 10%; transform: translate(-50%, 50%); width: 46%; height: 16%; }
+
+/* Mãos */
+.hand{
+  position:absolute;
+  display:flex;
+  gap: min(1.2vmin, 10px);
+  align-items:center;
+}
+
+.hand__card{
+  width: var(--handW);
+  height: var(--handH);
+}
+
+/* Human hand: parte de baixo */
+.hand--human{
+  left: 50%;
+  bottom: 2.8%;
+  transform: translateX(-50%);
+}
+
+/* IA2: topo - cartas menores e mais compactas */
+.hand--ai2{
+  left: 50%;
+  top: 2.6%;
+  transform: translateX(-50%);
+  opacity: .98;
+}
+
+/* IA1: vertical esquerda */
+.hand--ai1{
+  left: 3.6%;
+  top: 52%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+.hand--ai3{
+  right: 3.6%;
+  top: 52%;
+  transform: translateY(-50%);
+  flex-direction: column;
+}
+
+/* Barra de status */
+.statusBar{
+  position:absolute;
+  top: 10px;
+  right: 12px;
+  display:flex;
+  justify-content:flex-end;
+  pointer-events:none;
+}
+
+.statusBar__pill{
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.15);
+  backdrop-filter: blur(6px);
+}
+
+/* Ajustes para telas MUITO pequenas */
+@media (max-width: 420px){
+  :root{
+    --slotW: 10.5vmin;
+    --handW: 9.5vmin;
+  }
+  .playerArea--human{ width: 54%; }
+}
+
+/* Desktop / notebook (mantém proporcional, dá mais "ar") */
+@media (min-width: 900px){
+  :root{
+    --slotW: 70px;
+    --handW: 64px;
+  }
+  .boardShell{
+    padding: 16px;
+  }
+}
+
+
+/* ===== Leque nas mãos (override) ===== */
+.hand{
+  position:absolute;
+  width: max(260px, 52vmin);
+  height: max(110px, 22vmin);
+  pointer-events: none;
+}
+
+.hand__card{
+  position:absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--handW);
+  height: var(--handH);
+  pointer-events: auto;
+}
+
+/* Human hand: parte de baixo (leque) */
+.hand--human{
+  left: 50%;
+  bottom: 1.2%;
+  transform: translateX(-50%);
+  width: max(320px, 68vmin);
+  height: max(120px, 24vmin);
+}
+
+/* IA2: topo (leque) */
+.hand--ai2{
+  left: 50%;
+  top: 1.2%;
+  transform: translateX(-50%);
+  width: max(300px, 62vmin);
+  height: max(110px, 20vmin);
+  opacity: .98;
+}
+
+/* IA1: esquerda (leque vertical) */
+.hand--ai1{
+  left: 2.8%;
+  top: 52%;
+  transform: translateY(-50%);
+  width: max(120px, 22vmin);
+  height: max(260px, 52vmin);
+}
+
+/* IA3: direita (leque vertical) */
+.hand--ai3{
+  right: 2.8%;
+  top: 52%;
+  transform: translateY(-50%);
+  width: max(120px, 22vmin);
+  height: max(260px, 52vmin);
+}
+
+/* Monte mais centralizado */
+.deck{
+  top: 69%;
+}
+
+
+/* compat: nossa carta */
+.card-component{
+  border:0;
+  padding:0;
+  background:transparent;
+  cursor:default;
+  width:100%;
+  height:100%;
+  border-radius: var(--cardRadius);
+  overflow:hidden;
+  box-shadow: var(--shadow);
+  outline: 1px solid rgba(255,255,255,.08);
+}
+.card-component img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+}
+
+/* botões pequenos dentro do pill */
+.btnMini{
+  background: rgba(215,180,106,.95);
+  border: 1px solid rgba(255,255,255,.18);
+  color: #0b0f14;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+.btnMini:hover{ filter: brightness(1.05); }
+.btnMini--ghost{
+  background: rgba(20, 26, 34, .85);
+  color: #f8fafc;
+}
+
+.hand__card--playable{ cursor: pointer; }
+
+
+/* ===== Overlay dos slots no tabuleiro ===== */
+.boardSlots{
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+}
+
+/* Slots já existem (.slot / .slot--aiX). Aqui garantimos que o conteúdo preencha 100%. */
+.boardSlots .slot{
+  pointer-events: none;
+}
+
+.boardSlots .slot .playedSlot,
+.boardSlots .slot .playedSlotCard,
+.boardSlots .slot .playedSlotPlaceholder{
+  width: 100%;
+  height: 100%;
+}
+
+/* remove fundo branco do wrapper da carta jogada (fica só a carta) */
+.boardSlots .playedSlotCard{
+  background: transparent;
+  box-shadow: 0 12px 34px rgba(0,0,0,.35);
+}
+
+/* placeholder bem discreto */
+.boardSlots .playedSlotPlaceholder{
+  border: 1px dashed rgba(255,255,255,.18);
+  background: rgba(0,0,0,.12);
+}
+
+/* ===== Splash de entrada (4s) ===== */
+.splashScreen{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(800px 520px at 50% 45%, rgba(255,255,255,.08), rgba(0,0,0,.92)),
+    linear-gradient(180deg, rgba(0,0,0,.88), rgba(0,0,0,.96));
+  animation: splashScreenFadeOut .55s ease forwards;
+  animation-delay: 3.45s;
+}
+
+.splashLogo{
+  width: min(860px, 82vw);
+  height: auto;
+  opacity: 0;
+  filter: blur(26px);
+  transform: translateY(10px) scale(1.03);
+  animation: splashLogoReveal 3.2s ease-out forwards;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+@keyframes splashLogoReveal{
+  0%{ opacity: 0; filter: blur(26px); transform: translateY(14px) scale(1.05); }
+  65%{ opacity: 1; filter: blur(0px); transform: translateY(0px) scale(1); }
+  100%{ opacity: 1; filter: blur(0px); transform: translateY(0px) scale(1); }
+}
+
+@keyframes splashScreenFadeOut{
+  from{ opacity: 1; }
+  to{ opacity: 0; }
+}
