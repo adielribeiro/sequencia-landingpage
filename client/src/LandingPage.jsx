@@ -110,10 +110,16 @@ export default function LandingPage() {
       return;
     }
 
+<<<<<<< HEAD
     // Aqui é propositalmente simples (front-end only).
     // Se quiser envio real, plugue um Formspree/EmailJS ou endpoint no seu server.
     console.log('Contato enviado:', { name, email, message });
     setSnack('Mensagem enviada! (demo)');
+=======
+    // Implementação demonstrativa no front-end.
+    console.log('Contato enviado:', { name, email, message });
+    setSnack('Formulário demonstrativo: envio em fase de integração.');
+>>>>>>> 21e94c8 (Primeiro commit)
     setContact({ name: '', email: '', message: '' });
     setOpenContact(false);
   };
@@ -199,6 +205,7 @@ export default function LandingPage() {
             <Grid container spacing={4} alignItems="center">
               <Grid item xs={12} md={7}>
                 <Typography variant="h2" sx={{ fontSize: { xs: 42, md: 60 }, lineHeight: 1.05 }}>
+<<<<<<< HEAD
                   Uma sequência…
                   <Box component="span" sx={{ color: 'primary.main' }}>
                     {' '}
@@ -208,20 +215,39 @@ export default function LandingPage() {
                 <Typography sx={{ mt: 2, maxWidth: 680, opacity: 0.92, fontSize: { xs: 16, md: 18 } }}>
                   Um card game rápido para 2 a 4 jogadores (humano + IAs), onde a mesa vira um puzzle:
                   cada tipo de carta só aparece uma vez por sequência — exceto a Poção.
+=======
+                  Estratégia rápida.
+                  <Box component="span" sx={{ color: 'primary.main' }}>
+                    {' '}
+                    Caos glorioso.
+                  </Box>
+                </Typography>
+                <Typography sx={{ mt: 2, maxWidth: 680, opacity: 0.92, fontSize: { xs: 16, md: 18 } }}>
+                  Um card game dinâmico para 2 a 4 jogadores, com partidas rápidas, decisões táticas
+                  e uma mesa que muda a cada rodada. Cada tipo de carta aparece apenas uma vez por sequência —
+                  exceto a Poção.
+>>>>>>> 21e94c8 (Primeiro commit)
                 </Typography>
 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 3 }}>
                   <Button size="large" variant="contained" startIcon={<PlayArrowIcon />} onClick={() => setOpenRules(true)}>
+<<<<<<< HEAD
                     Ler regras e jogar
+=======
+                    Ver regras e jogar
+>>>>>>> 21e94c8 (Primeiro commit)
                   </Button>
                   <Button size="large" color="inherit" variant="outlined" onClick={scrollToHowTo}>
                     Como funciona
                   </Button>
                 </Stack>
 
+<<<<<<< HEAD
                 <Typography sx={{ mt: 2, opacity: 0.7, fontSize: 13 }}>
                   Dica nerd: para abrir o jogo local neste projeto, use o hash <b>#/game</b>.
                 </Typography>
+=======
+>>>>>>> 21e94c8 (Primeiro commit)
               </Grid>
 
               <Grid item xs={12} md={5}>
@@ -236,7 +262,11 @@ export default function LandingPage() {
                     Mini galeria
                   </Typography>
                   <Typography sx={{ opacity: 0.8, fontSize: 13, mb: 1.5 }}>
+<<<<<<< HEAD
                     Um gostinho do tabuleiro em ação.
+=======
+                    Veja o visual e o ritmo das partidas.
+>>>>>>> 21e94c8 (Primeiro commit)
                   </Typography>
 
                   <Grid container spacing={1.25}>
@@ -274,7 +304,11 @@ export default function LandingPage() {
 
                   <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
                     <Typography sx={{ opacity: 0.85, fontSize: 14 }}>
+<<<<<<< HEAD
                       Pronto pra testar?
+=======
+                      Entre na arena
+>>>>>>> 21e94c8 (Primeiro commit)
                     </Typography>
                     <Button variant="outlined" color="inherit" onClick={() => setOpenRules(true)}>
                       Ver regras
@@ -298,7 +332,11 @@ export default function LandingPage() {
           <Container>
             <Typography variant="h4">Galeria</Typography>
             <Typography sx={{ mt: 1, maxWidth: 820, opacity: 0.86 }}>
+<<<<<<< HEAD
               Duas cenas reais do jogo — pra você entender o clima antes de cair na arena.
+=======
+              Confira duas cenas do jogo e veja a atmosfera da partida antes de entrar na arena.
+>>>>>>> 21e94c8 (Primeiro commit)
             </Typography>
 
             <Grid container spacing={2.2} sx={{ mt: 2.5 }}>
@@ -337,8 +375,13 @@ export default function LandingPage() {
           <Container>
             <Typography variant="h4">Como jogar</Typography>
             <Typography sx={{ mt: 1, maxWidth: 820, opacity: 0.86 }}>
+<<<<<<< HEAD
               A regra central é simples e maldosa: numa mesma sequência (mesa), cada tipo de carta comum só pode aparecer uma vez.
               Quem ficar sem cartas na mão primeiro vence.
+=======
+              A mecânica central é simples e estratégica: numa mesma sequência, cada tipo de carta comum só pode aparecer uma vez.
+              Vence quem esvaziar a mão primeiro.
+>>>>>>> 21e94c8 (Primeiro commit)
             </Typography>
 
             <Grid container spacing={2.2} sx={{ mt: 2.5 }}>
@@ -384,7 +427,11 @@ export default function LandingPage() {
                 <Paper sx={{ p: 2.25, height: '100%', border: '1px solid rgba(255,255,255,.10)' }}>
                   <Typography sx={{ fontWeight: 900 }}>5) Vitória</Typography>
                   <Typography sx={{ mt: 1, opacity: 0.85 }}>
+<<<<<<< HEAD
                     Zerou a mão? Você venceu. Simples. Implacável. Cientificamente divertido.
+=======
+                    Esvazie a mão antes dos adversários e conquiste a vitória. Rápido, estratégico e viciante.
+>>>>>>> 21e94c8 (Primeiro commit)
                   </Typography>
                 </Paper>
               </Grid>
@@ -412,7 +459,11 @@ export default function LandingPage() {
         >
           <Container>
             <Typography sx={{ opacity: 0.75, fontSize: 13 }}>
+<<<<<<< HEAD
               Sequência Card Game - ArchangelSoft todos os diretos reservados
+=======
+              Sequência Card Game - ArchangelSoft. Todos os direitos reservados.
+>>>>>>> 21e94c8 (Primeiro commit)
             </Typography>
           </Container>
         </Box>
@@ -509,7 +560,11 @@ export default function LandingPage() {
                 Enviar
               </Button>
               <Typography sx={{ opacity: 0.7, fontSize: 12 }}>
+<<<<<<< HEAD
                 Envio real não está configurado (demo). Se quiser, eu plugo isso em um serviço (Formspree/EmailJS) ou no seu server.
+=======
+                Canal de contato em fase de integração.
+>>>>>>> 21e94c8 (Primeiro commit)
               </Typography>
             </Stack>
           </Box>
