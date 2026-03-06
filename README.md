@@ -58,12 +58,30 @@ sequencia/
             └── Card.jsx     — representação gráfica de uma carta
 ```
 
+## Formulário de contato por e-mail
+
+A landing page agora envia o formulário para o endpoint `POST /contact` no servidor Node. O servidor usa SMTP via `nodemailer`, então você só precisa configurar as variáveis de ambiente abaixo:
+
+```env
+SMTP_HOST=smtp.seudominio.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=contato@seudominio.com
+SMTP_PASS=sua_senha_ou_token_smtp
+SMTP_FROM="Sequência Card Game <contato@seudominio.com>"
+CONTACT_TO_EMAIL=contato@seudominio.com
+```
+
+Há também um ficheiro de exemplo em `server/.env.example`. No front-end, se o servidor estiver em outra URL, configure `VITE_SERVER_URL` (veja `client/.env.example`).
+
 ## Executando localmente
 
 1. Certifique‑se de ter o Node.js instalado (versão 18 ou superior).
-2. Em dois terminais separados:
+2. No servidor, copie `server/.env.example` para `.env` e preencha os dados SMTP.
+3. No cliente, copie `client/.env.example` para `.env` se precisar apontar para um servidor diferente do padrão.
+4. Em dois terminais separados:
    - `cd sequencia/server && npm install && npm start` – inicia o servidor WebSocket/HTTP na porta 4000.
    - `cd sequencia/client && npm install && npm run dev` – inicia a aplicação React (Vite) na porta 5173.
-3. Abra o navegador em `http://localhost:5173` para criar uma sala de jogo e convidar amigos (todos os clientes devem usar o mesmo ID da sala para participar).
+5. Abra o navegador em `http://localhost:5173` para criar uma sala de jogo e convidar amigos (todos os clientes devem usar o mesmo ID da sala para participar).
 
 Esta implementação inicial pretende demonstrar a mecânica e pode ser expandida com melhorias visuais, persistência de estado em banco de dados, autenticação, etc.

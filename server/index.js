@@ -11,11 +11,18 @@ import express from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
+import nodemailer from 'nodemailer';
 import Game from './game.js';
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+
 
 const app = express();
 // Habilitar CORS para permitir chamadas do front‑end local
 app.use(cors());
+app.use(express.json({ limit: '100kb' }));
 
 const httpServer = http.createServer(app);
 const io = new SocketIOServer(httpServer, {
@@ -36,6 +43,101 @@ const AI_TELEGRAPH_MS = 850;
 
 // Evita agendar múltiplas ações da IA ao mesmo tempo para a mesma partida.
 const aiTimers = new Map(); // gameId -> { t, playerId }
+
+const contactAttempts = new Map();
+const CONTACT_WINDOW_MS = 15 * 60 * 1000;
+const CONTACT_MAX_ATTEMPTS = 5;
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const attempts = (contactAttempts.get(ip) || []).filter((ts) => now - ts < CONTACT_WINDOW_MS);
+  attempts.push(now);
+  contactAttempts.set(ip, attempts);
+  return attempts.length > CONTACT_MAX_ATTEMPTS;
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getMailConfig() {
+  return {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: String(process.env.SMTP_SECURE || 'false').toLowerCase() === 'true',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to: process.env.CONTACT_TO_EMAIL,
+  };
+}
+
+async function sendContactEmail({ name, email, message }) {
+  const config = getMailConfig();
+  if (!config.host || !config.port || !config.user || !config.pass || !config.from || !config.to) {
+    throw new Error('Configuração de e-mail incompleta no servidor.');
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth: {
+      user: config.user,
+      pass: config.pass,
+    },
+  });
+
+  const subject = `Novo contato do site - ${name}`;
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeMessage = escapeHtml(message);
+  const text = [
+    'Novo contato recebido pelo formulário do site.',
+    '',
+    `Nome: ${name}`,
+    `E-mail: ${email}`,
+    '',
+    'Mensagem:',
+    message,
+  ].join('\n');
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
+      <h2>Novo contato recebido pelo formulário do site</h2>
+      <p><strong>Nome:</strong> ${safeName}</p>
+      <p><strong>E-mail:</strong> ${safeEmail}</p>
+      <p><strong>Mensagem:</strong></p>
+      <div style="white-space: pre-wrap; border: 1px solid #ddd; padding: 12px; border-radius: 8px;">${safeMessage}</div>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: config.from,
+    to: config.to,
+    replyTo: email,
+    subject,
+    text,
+    html,
+  });
+}
 
 /**
  * Executa jogadas automáticas para bots enquanto for a vez deles.
@@ -168,6 +270,38 @@ function getOrCreateGame(gameId) {
 }
 
 
+
+
+app.post('/contact', async (req, res) => {
+  const ip = getClientIp(req);
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' });
+  }
+
+  const name = String(req.body?.name || '').trim();
+  const email = String(req.body?.email || '').trim();
+  const message = String(req.body?.message || '').trim();
+
+  if (!name || !email || !message) {
+    return res.status(400).json({ error: 'Nome, e-mail e mensagem são obrigatórios.' });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: 'Informe um e-mail válido.' });
+  }
+
+  if (name.length > 120 || email.length > 160 || message.length > 4000) {
+    return res.status(400).json({ error: 'Os campos enviados excedem o limite permitido.' });
+  }
+
+  try {
+    await sendContactEmail({ name, email, message });
+    return res.json({ message: 'Mensagem enviada com sucesso. Em breve entraremos em contato.' });
+  } catch (error) {
+    console.error('Erro ao enviar e-mail de contato:', error);
+    return res.status(500).json({ error: 'O envio de e-mail não está disponível no servidor no momento.' });
+  }
+});
 
 // 📝 Endpoint simples para baixar log
 app.get('/log/:gameId', (req, res) => {
